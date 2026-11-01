@@ -1,3 +1,15 @@
+# Fix voor de CMD one-liner: Forceer STA modus voor WPF als dat nog niet zo is
+if ([System.Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
+    $scriptPath = $MyInvocation.MyCommand.Path
+    if (-not $scriptPath) {
+        Start-Process powershell -ArgumentList "-STA -NoProfile -ExecutionPolicy Bypass -Command `"iwr https://raw.githubusercontent.com/blowingbob/SS-Tool-Checker/main/main -UseBasicParsing | iex`""
+        exit
+    } else {
+        Start-Process powershell -ArgumentList "-STA -NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`""
+        exit
+    }
+}
+
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
@@ -11,8 +23,74 @@ $installDir = "$env:USERPROFILE\Downloads\AntiSSTool"
 # ==============================================================================
 # TOOL DATA
 # ==============================================================================
+# Hier is het nieuwe script ingevoegd. We escapen de $ tekens met een backtick (`) 
+# zodat PowerShell ze niet meteen uitvoert, maar als tekst opslaat voor de nieuwe window.
+$svchostScript = @"
+Write-Host "=== Verdachte svchost Process Killer ===" -ForegroundColor Cyan
+Write-Host "Normale svchost processen worden niet aangeraakt.`n" -ForegroundColor Gray
+
+`$svchosts = Get-Process -Name "svchost" -ErrorAction SilentlyContinue
+
+if (`$svchosts.Count -eq 0) {
+    Write-Host "Geen svchost processen gevonden!" -ForegroundColor Yellow
+    Read-Host "Druk op Enter om te sluiten"
+    exit
+}
+
+foreach (`$proc in `$svchosts) {
+    try {
+        `$cimProc = Get-CimInstance Win32_Process -Filter "ProcessId = `$(`$proc.Id)" -ErrorAction Stop
+        `$parent = Get-Process -Id `$proc.ParentProcessId -ErrorAction SilentlyContinue
+        
+        `$commandLine = `$cimProc.CommandLine
+        `$isSuspicious = `$false
+        `$reason = ""
+
+        # Criteria
+        if ([string]::IsNullOrWhiteSpace(`$commandLine) -or `$commandLine -notmatch "\-k ") {
+            `$isSuspicious = `$true
+            `$reason += " CommandLine ontbreekt of -k parameter mist"
+        }
+
+        if (`$parent -and `$parent.Name -notin @("services.exe", "svchost.exe")) {
+            `$isSuspicious = `$true
+            `$reason += " Parent: `$(`$parent.Name)"
+        }
+
+        if (`$proc.StartTime -gt (Get-Date).AddHours(-1)) {
+            `$isSuspicious = `$true
+            `$reason += " Recent gestart"
+        }
+
+        if (`$isSuspicious) {
+            Write-Host "[-] Verdachte svchost gedetecteerd! PID: `$(`$proc.Id) | `$(`$reason.Trim())" -ForegroundColor Red
+            Stop-Process -Id `$proc.Id -Force -ErrorAction SilentlyContinue
+            Write-Host "    -> Beeindigd" -ForegroundColor DarkRed
+        }
+        else {
+            Write-Host "[+] Normale svchost -> PID: `$(`$proc.Id)" -ForegroundColor Green
+        }
+    }
+    catch {
+        Write-Host "[!] Fout bij analyseren van PID `$(`$proc.Id)" -ForegroundColor Gray
+    }
+}
+
+Write-Host "`nProces voltooid." -ForegroundColor Cyan
+Write-Host "Origineel script by Grok" -ForegroundColor DarkGray
+Write-Host "`nDruk op Enter om te sluiten..."
+Read-Host
+"@
+
 $ToolData = @(
-    @{ Name="Service Manager"; Desc="Bekijk en beheer actieve Windows services"; Category="Services"; Type="Cmd"; Command="Get-Service | Format-Table -AutoSize | Out-String -Width 200" }
+    @{ 
+        Name="Suspicious svchost Killer"; 
+        Desc="Detecteert en beeindigt verdachte svchost processen"; 
+        Category="Services"; 
+        Type="Cmd"; 
+        RequireAdmin=$true; 
+        Command=$svchostScript 
+    }
 )
 
 $Categories = @(
@@ -103,10 +181,10 @@ $Categories = @(
                 <RowDefinition Height="60"/> <!-- Header -->
                 <RowDefinition Height="50"/> <!-- Search -->
                 <RowDefinition Height="*"/>  <!-- Tools -->
-                <RowDefinition Height="200"/> <!-- Console (Groter gemaakt) -->
+                <RowDefinition Height="200"/> <!-- Console -->
             </Grid.RowDefinitions>
 
-            <!-- 1. HEADER (Emojis verwijderd) -->
+            <!-- 1. HEADER -->
             <Border Grid.Row="0" Background="{StaticResource HeaderBg}" CornerRadius="10,10,0,0" BorderBrush="#2D3748" BorderThickness="0,0,0,1">
                 <Grid Margin="20,0">
                     <Grid.ColumnDefinitions>
@@ -132,7 +210,7 @@ $Categories = @(
                 </Grid>
             </Border>
 
-            <!-- 2. SEARCH & ACTIONS (Emojis verwijderd) -->
+            <!-- 2. SEARCH & ACTIONS -->
             <Grid Grid.Row="1" Background="{StaticResource HeaderBg}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -198,7 +276,7 @@ $Categories = @(
                 </TabControl>
             </Grid>
 
-            <!-- 4. CONSOLE (Statusbalk is weg, console is nu Row 3 en groter) -->
+            <!-- 4. CONSOLE -->
             <Border Grid.Row="3" Background="{StaticResource ConsoleBg}" CornerRadius="0,0,10,10" Padding="20,15" BorderBrush="#2D3748" BorderThickness="0,1,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -229,7 +307,6 @@ $Categories = @(
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [Windows.Markup.XamlReader]::Load($reader)
 
-# Alleen de elementen die nog bestaan
 $MinBtn        = $window.FindName("MinBtn")
 $CloseBtn      = $window.FindName("CloseBtn")
 $LogBox        = $window.FindName("LogBox")
@@ -251,7 +328,6 @@ function Write-Log {
     })
 }
 
-# Dummy functie zodat de achtergrond-taken niet crashen nu de statusbalk weg is
 function Set-Status { param($title, $sub, $badge, $color) }
 
 function Start-AppOrScript {
@@ -275,7 +351,7 @@ function Start-CmdToolCommand {
         [Parameter(Mandatory=$true)][string]$Command,
         [switch]$RequireAdmin
     )
-    $header = "# Anti SS Tool`n# Commando: $Command`n# ----------------------------------------`n`n"
+    $header = "# Anti SS Tool`n# ----------------------------------------`n`n"
     $tempScript = [System.IO.Path]::Combine($env:TEMP, "toolkit_$([guid]::NewGuid().ToString('N')).ps1")
     Set-Content -LiteralPath $tempScript -Value ($header + $Command) -Encoding UTF8 -Force
 
