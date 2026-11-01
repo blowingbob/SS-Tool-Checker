@@ -23,73 +23,78 @@ $installDir = "$env:USERPROFILE\Downloads\AntiSSTool"
 # ==============================================================================
 # TOOL DATA
 # ==============================================================================
-# We escapen de $ tekens met een backtick (`) zodat PowerShell ze niet 
-# meteen uitvoert, maar als platte tekst doorgeeft aan het nieuwe venster.
+# Het gerepareerde svchost script (zonder rare tekens en met correcte logica)
 $svchostScript = @"
 # ================================================
-# Şüpheli svchost Killer (Güvenli Versiyon)
-# Github'dan direkt çalıştırılabilir
+# Suspicious svchost Process Killer
 # ================================================
 
-Write-Host "=== Şüpheli svchost Process Killer ===" -ForegroundColor Cyan
-Write-Host "Normal svchost'lara dokunulmayacak.`n" -ForegroundColor Gray
+Write-Host "=== Suspicious svchost Process Killer ===" -ForegroundColor Cyan
+Write-Host "Normal svchost processes will be ignored.`n" -ForegroundColor Gray
 
-`$svchosts = Get-Process -Name "svchost" -ErrorAction SilentlyContinue
+# Check voor Admin rechten
+`$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not `$isAdmin) {
+    Write-Host "ERROR: Je moet dit script als Administrator uitvoeren!" -ForegroundColor Red
+    Read-Host "Druk op Enter om te sluiten..."
+    exit
+}
+
+`$svchosts = Get-CimInstance Win32_Process -Filter "Name = 'svchost.exe'"
 
 if (`$svchosts.Count -eq 0) {
-    Write-Host "Hiç svchost process'i bulunamadı!" -ForegroundColor Yellow
-    Read-Host "Druk op Enter om te sluiten"
+    Write-Host "Geen svchost processen gevonden!" -ForegroundColor Yellow
+    Read-Host "Druk op Enter om te sluiten..."
     exit
 }
 
 foreach (`$proc in `$svchosts) {
     try {
-        `$cimProc = Get-CimInstance Win32_Process -Filter "ProcessId = `$(`$proc.Id)" -ErrorAction Stop
-        `$parent = Get-Process -Id `$proc.ParentProcessId -ErrorAction SilentlyContinue
-        
-        `$commandLine = `$cimProc.CommandLine
         `$isSuspicious = `$false
         `$reason = ""
 
-        # Kriterler
-        if ([string]::IsNullOrWhiteSpace(`$commandLine) -or `$commandLine -notmatch "\-k ") {
+        # Check 1: Mist de -k parameter in de command line?
+        if ([string]::IsNullOrWhiteSpace(`$proc.CommandLine) -or `$proc.CommandLine -notmatch "\-k ") {
             `$isSuspicious = `$true
-            `$reason += " CommandLine yok veya -k parametresi eksik"
+            `$reason += " Mist -k parameter."
         }
 
+        # Check 2: Is de parent niet services.exe of svchost.exe?
+        `$parent = Get-CimInstance Win32_Process -Filter "ProcessId = `$(`$proc.ParentProcessId)" -ErrorAction SilentlyContinue
         if (`$parent -and `$parent.Name -notin @("services.exe", "svchost.exe")) {
             `$isSuspicious = `$true
-            `$reason += " Parent: `$(`$parent.Name)"
+            `$reason += " Verdachte Parent: `$(`$parent.Name)."
         }
 
-        if (`$proc.StartTime -gt (Get-Date).AddHours(-1)) {
+        # Check 3: Is het proces recent gestart? (CIM datum omzetten)
+        `$startTime = [Management.ManagementDateTimeConverter]::ToDateTime(`$proc.CreationDate)
+        if (`$startTime -gt (Get-Date).AddHours(-1)) {
             `$isSuspicious = `$true
-            `$reason += " Yeni başlatılmış"
+            `$reason += " Recent gestart."
         }
 
         if (`$isSuspicious) {
-            Write-Host "[-] Şüpheli svchost tespit edildi! PID: `$(`$proc.Id) | `$( `$reason.Trim() )" -ForegroundColor Red
-            Stop-Process -Id `$proc.Id -Force -ErrorAction SilentlyContinue
-            Write-Host "    -> Öldürüldü" -ForegroundColor DarkRed
+            Write-Host "[-] Verdachte svchost gevonden! PID: `$(`$proc.ProcessId) |`$(`$reason.Trim())" -ForegroundColor Red
+            Stop-Process -Id `$proc.ProcessId -Force -ErrorAction SilentlyContinue
+            Write-Host "    -> Beeindigd" -ForegroundColor DarkRed
         }
         else {
-            Write-Host "[+] Normal svchost -> PID: `$(`$proc.Id)" -ForegroundColor Green
+            Write-Host "[+] Normaal proces -> PID: `$(`$proc.ProcessId)" -ForegroundColor Green
         }
     }
     catch {
-        Write-Host "[!] PID `$(`$proc.Id) incelenirken hata oluştu" -ForegroundColor Gray
+        Write-Host "[!] Fout bij PID `$(`$proc.ProcessId): `$(`$_.Exception.Message)" -ForegroundColor Gray
     }
 }
 
-Write-Host "`nİşlem tamamlandı." -ForegroundColor Cyan
-Write-Host "Script by Grok" -ForegroundColor DarkGray
-Read-Host "`nDruk op Enter om te sluiten..."
+Write-Host "`nScan voltooid." -ForegroundColor Cyan
+Read-Host "Druk op Enter om te sluiten..."
 "@
 
 $ToolData = @(
     @{ 
         Name="Service"; 
-        Desc="Şüpheli svchost Process Killer"; 
+        Desc="Detecteert en beeindigt verdachte svchost processen"; 
         Category="Services"; 
         Type="Cmd"; 
         RequireAdmin=$true; 
@@ -182,13 +187,12 @@ $Categories = @(
     <Border Background="{StaticResource MainBg}" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="10">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="60"/> <!-- Header -->
-                <RowDefinition Height="50"/> <!-- Search -->
-                <RowDefinition Height="*"/>  <!-- Tools -->
-                <RowDefinition Height="200"/> <!-- Console -->
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="200"/>
             </Grid.RowDefinitions>
 
-            <!-- 1. HEADER -->
             <Border Grid.Row="0" Background="{StaticResource HeaderBg}" CornerRadius="10,10,0,0" BorderBrush="#2D3748" BorderThickness="0,0,0,1">
                 <Grid Margin="20,0">
                     <Grid.ColumnDefinitions>
@@ -214,7 +218,6 @@ $Categories = @(
                 </Grid>
             </Border>
 
-            <!-- 2. SEARCH & ACTIONS -->
             <Grid Grid.Row="1" Background="{StaticResource HeaderBg}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -240,7 +243,6 @@ $Categories = @(
                 </StackPanel>
             </Grid>
 
-            <!-- 3. TOOLS AREA -->
             <Grid Grid.Row="2" Margin="20,10,20,10">
                 <TabControl x:Name="ToolsTab" Background="Transparent" BorderThickness="0">
                     <TabControl.Resources>
@@ -280,7 +282,6 @@ $Categories = @(
                 </TabControl>
             </Grid>
 
-            <!-- 4. CONSOLE -->
             <Border Grid.Row="3" Background="{StaticResource ConsoleBg}" CornerRadius="0,0,10,10" Padding="20,15" BorderBrush="#2D3748" BorderThickness="0,1,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -357,7 +358,8 @@ function Start-CmdToolCommand {
     )
     $header = "# Anti SS Tool`n# ----------------------------------------`n`n"
     $tempScript = [System.IO.Path]::Combine($env:TEMP, "toolkit_$([guid]::NewGuid().ToString('N')).ps1")
-    Set-Content -LiteralPath $tempScript -Value ($header + $Command) -Encoding UTF8 -Force
+    # BELANGRIJK: We slaan het op als UTF8 met BOM zodat speciale tekens en Admin checks goed werken
+    [System.IO.File]::WriteAllText($tempScript, ($header + $Command), [System.Text.Encoding]::UTF8)
 
     $psArgs = @(
         "-NoLogo", "-NoExit", "-NoProfile",
