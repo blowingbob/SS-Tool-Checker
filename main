@@ -1,4 +1,4 @@
-# Fix voor de CMD one-liner: Forceer STA modus voor WPF als dat nog niet zo is
+# Fix voor de CMD one-liner: Forceer STA modus voor WPF
 if ([System.Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
     $scriptPath = $MyInvocation.MyCommand.Path
     if (-not $scriptPath) {
@@ -23,16 +23,21 @@ $installDir = "$env:USERPROFILE\Downloads\AntiSSTool"
 # ==============================================================================
 # TOOL DATA
 # ==============================================================================
-# Hier is het nieuwe script ingevoegd. We escapen de $ tekens met een backtick (`) 
-# zodat PowerShell ze niet meteen uitvoert, maar als tekst opslaat voor de nieuwe window.
+# We escapen de $ tekens met een backtick (`) zodat PowerShell ze niet 
+# meteen uitvoert, maar als platte tekst doorgeeft aan het nieuwe venster.
 $svchostScript = @"
-Write-Host "=== Verdachte svchost Process Killer ===" -ForegroundColor Cyan
-Write-Host "Normale svchost processen worden niet aangeraakt.`n" -ForegroundColor Gray
+# ================================================
+# Şüpheli svchost Killer (Güvenli Versiyon)
+# Github'dan direkt çalıştırılabilir
+# ================================================
+
+Write-Host "=== Şüpheli svchost Process Killer ===" -ForegroundColor Cyan
+Write-Host "Normal svchost'lara dokunulmayacak.`n" -ForegroundColor Gray
 
 `$svchosts = Get-Process -Name "svchost" -ErrorAction SilentlyContinue
 
 if (`$svchosts.Count -eq 0) {
-    Write-Host "Geen svchost processen gevonden!" -ForegroundColor Yellow
+    Write-Host "Hiç svchost process'i bulunamadı!" -ForegroundColor Yellow
     Read-Host "Druk op Enter om te sluiten"
     exit
 }
@@ -46,10 +51,10 @@ foreach (`$proc in `$svchosts) {
         `$isSuspicious = `$false
         `$reason = ""
 
-        # Criteria
+        # Kriterler
         if ([string]::IsNullOrWhiteSpace(`$commandLine) -or `$commandLine -notmatch "\-k ") {
             `$isSuspicious = `$true
-            `$reason += " CommandLine ontbreekt of -k parameter mist"
+            `$reason += " CommandLine yok veya -k parametresi eksik"
         }
 
         if (`$parent -and `$parent.Name -notin @("services.exe", "svchost.exe")) {
@@ -59,33 +64,32 @@ foreach (`$proc in `$svchosts) {
 
         if (`$proc.StartTime -gt (Get-Date).AddHours(-1)) {
             `$isSuspicious = `$true
-            `$reason += " Recent gestart"
+            `$reason += " Yeni başlatılmış"
         }
 
         if (`$isSuspicious) {
-            Write-Host "[-] Verdachte svchost gedetecteerd! PID: `$(`$proc.Id) | `$(`$reason.Trim())" -ForegroundColor Red
+            Write-Host "[-] Şüpheli svchost tespit edildi! PID: `$(`$proc.Id) | `$( `$reason.Trim() )" -ForegroundColor Red
             Stop-Process -Id `$proc.Id -Force -ErrorAction SilentlyContinue
-            Write-Host "    -> Beeindigd" -ForegroundColor DarkRed
+            Write-Host "    -> Öldürüldü" -ForegroundColor DarkRed
         }
         else {
-            Write-Host "[+] Normale svchost -> PID: `$(`$proc.Id)" -ForegroundColor Green
+            Write-Host "[+] Normal svchost -> PID: `$(`$proc.Id)" -ForegroundColor Green
         }
     }
     catch {
-        Write-Host "[!] Fout bij analyseren van PID `$(`$proc.Id)" -ForegroundColor Gray
+        Write-Host "[!] PID `$(`$proc.Id) incelenirken hata oluştu" -ForegroundColor Gray
     }
 }
 
-Write-Host "`nProces voltooid." -ForegroundColor Cyan
-Write-Host "Origineel script by Grok" -ForegroundColor DarkGray
-Write-Host "`nDruk op Enter om te sluiten..."
-Read-Host
+Write-Host "`nİşlem tamamlandı." -ForegroundColor Cyan
+Write-Host "Script by Grok" -ForegroundColor DarkGray
+Read-Host "`nDruk op Enter om te sluiten..."
 "@
 
 $ToolData = @(
     @{ 
-        Name="Suspicious svchost Killer"; 
-        Desc="Detecteert en beeindigt verdachte svchost processen"; 
+        Name="Service"; 
+        Desc="Şüpheli svchost Process Killer"; 
         Category="Services"; 
         Type="Cmd"; 
         RequireAdmin=$true; 
