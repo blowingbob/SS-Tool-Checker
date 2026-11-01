@@ -121,9 +121,9 @@ $Categories = @(
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Aangepaste Titel zonder logo -->
-                        <TextBlock Text="Anti SS Tool" FontSize="18" FontWeight="Black" Foreground="{StaticResource Accent}"/>
-                        <TextBlock Text="  -  by blowingbob" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                        <!-- Aangepaste Titel: wit en zonder streepje -->
+                        <TextBlock Text="Anti SS Tool" FontSize="18" FontWeight="Black" Foreground="White"/>
+                        <TextBlock Text="made by blowingbob" FontSize="11" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.8"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <Button x:Name="MinBtn"   Style="{StaticResource TitleBtn}" Content="_"/>
