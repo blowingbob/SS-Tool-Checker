@@ -11,12 +11,20 @@ $installDir = "$env:USERPROFILE\Downloads\AntiSSTool"
 # ==============================================================================
 # TOOL DATA  —  voeg hier je eigen tools toe
 # ==============================================================================
+# Ondersteunde types:
+#   "GitHub"  -> URL eindigt op /releases/latest of /releases/tag/...
+#   "Web"     -> directe .zip/.exe URL of een gewone webpagina
+#   "Cmd"     -> PowerShell commando (LET OP: alleen voor vertrouwde bronnen!)
+#   "Link"    -> opent gewoon in de browser
+# ==============================================================================
 $ToolData = @(
-    # Leeg — voeg je eigen tools hier toe
+    # Voorbeeld tool in de nieuwe "Services" categorie
+    @{ Name="Service Manager"; Desc="Bekijk en beheer actieve Windows services"; Category="Services"; Type="Cmd"; Command="Get-Service | Out-String -Width 200" }
 )
 
+# Categorieën die als tabs verschijnen
 $Categories = @(
-    # "MijnTools"
+    "Services"
 )
 
 # ==============================================================================
@@ -780,6 +788,6 @@ $OpenCmdBtn.Add_Click({
 Write-Log "Systeem geinitialiseerd."
 Write-Log "Opslaglocatie: $installDir"
 Write-Log "Wachten op input..."
-Set-Status "Systeem Gereed" "Voeg tools toe aan `$ToolData om te beginnen." "IDLE" "#10B981"
+Set-Status "Systeem Gereed" "Klik op een tool in de Services tab." "IDLE" "#10B981"
 
 $window.ShowDialog() | Out-Null
