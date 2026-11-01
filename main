@@ -16,10 +16,11 @@ $installDir = "$env:USERPROFILE\Downloads\AntiSSTool"
 #   "Web"     -> directe .zip/.exe URL of een gewone webpagina
 #   "Cmd"     -> PowerShell commando (LET OP: alleen voor vertrouwde bronnen!)
 #   "Link"    -> opent gewoon in de browser
+#
+# Optioneel: RequireAdmin=$true om UAC-prompt te forceren
 # ==============================================================================
 $ToolData = @(
-    # Voorbeeld tool in de nieuwe "Services" categorie
-    @{ Name="Service Manager"; Desc="Bekijk en beheer actieve Windows services"; Category="Services"; Type="Cmd"; Command="Get-Service | Out-String -Width 200" }
+    @{ Name="Service Manager"; Desc="Bekijk en beheer actieve Windows services"; Category="Services"; Type="Cmd"; Command="Get-Service | Format-Table -AutoSize | Out-String -Width 200" }
 )
 
 # Categorieën die als tabs verschijnen
@@ -111,11 +112,11 @@ $Categories = @(
     <Border Background="{StaticResource MainBg}" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="10">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="60"/> <!-- Header -->
-                <RowDefinition Height="50"/> <!-- Search & Actions -->
-                <RowDefinition Height="*"/>  <!-- Tools Area -->
-                <RowDefinition Height="Auto"/> <!-- Status Bar -->
-                <RowDefinition Height="180"/> <!-- Console -->
+                <RowDefinition Height="60"/>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="180"/>
             </Grid.RowDefinitions>
 
             <!-- 1. HEADER -->
@@ -126,10 +127,10 @@ $Categories = @(
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     
-                    <!-- Titel met Neon Glow -->
+                    <!-- Titel met Neon Glow (LetterSpacing verwijderd - bestaat niet in WPF) -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="🛡️" FontSize="22" Foreground="{StaticResource Accent}" Margin="0,0,10,0"/>
-                        <TextBlock Text="ANTI SS TOOL" FontSize="20" FontWeight="Black" Foreground="White" LetterSpacing="2">
+                        <TextBlock Text="ANTI SS TOOL" FontSize="20" FontWeight="Black" Foreground="White">
                             <TextBlock.Effect>
                                 <DropShadowEffect Color="#8B5CF6" BlurRadius="15" ShadowDepth="0" Opacity="0.5"/>
                             </TextBlock.Effect>
@@ -316,12 +317,35 @@ function Start-AppOrScript {
     }
 }
 
+# GEFIXT: PowerShell direct starten ipv via cmd.exe + RunAs (faalde stilletjes)
 function Start-CmdToolCommand {
-    param([Parameter(Mandatory=$true)][string]$Command)
+    param(
+        [Parameter(Mandatory=$true)][string]$Command,
+        [switch]$RequireAdmin
+    )
+
+    $header = "# Anti SS Tool`n# Commando: $Command`n# ----------------------------------------`n`n"
     $tempScript = [System.IO.Path]::Combine($env:TEMP, "toolkit_$([guid]::NewGuid().ToString('N')).ps1")
-    Set-Content -LiteralPath $tempScript -Value $Command -Encoding UTF8 -Force
-    $startArgs = '/c start "Toolkit" powershell.exe -NoExit -NoProfile -ExecutionPolicy Bypass -File "' + $tempScript + '"'
-    Start-Process -FilePath "cmd.exe" -ArgumentList $startArgs -WindowStyle Hidden -Verb RunAs
+    Set-Content -LiteralPath $tempScript -Value ($header + $Command) -Encoding UTF8 -Force
+
+    $psArgs = @(
+        "-NoLogo",
+        "-NoExit",
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "`"$tempScript`""
+    )
+
+    try {
+        if ($RequireAdmin) {
+            Start-Process -FilePath "powershell.exe" -ArgumentList $psArgs -Verb RunAs | Out-Null
+        } else {
+            Start-Process -FilePath "powershell.exe" -ArgumentList $psArgs -WindowStyle Normal | Out-Null
+        }
+    } catch {
+        Write-Log "Kon Cmd-tool niet starten: $($_.Exception.Message)"
+        Set-Status "Error" "Cmd kon niet starten." "ERR" "#EF4444"
+    }
 }
 
 function Save-UrlToFile {
@@ -403,7 +427,8 @@ function Invoke-ToolAction {
     if ($type -eq "Cmd") {
         Write-Log "Starting $name..."
         Set-Status "Running" "Launching $name..." "BUSY" "#F59E0B"
-        Start-CmdToolCommand -Command $tool.Command
+        $admin = if ($tool.RequireAdmin) { $true } else { $false }
+        Start-CmdToolCommand -Command $tool.Command -RequireAdmin:$admin
         Set-Status "Gereed" "$name launched." "IDLE" "#10B981"
         return
     }
@@ -555,16 +580,14 @@ foreach ($cat in $Categories) {
         $btn.Foreground = $textBrush
         $btn.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161B26")
         
-        # Bepaal de accentkleur op basis van type
         $accentColor = switch ($t.Type) {
-            "GitHub" { "#3B82F6" } # Blauw
-            "Cmd"    { "#10B981" } # Groen
-            "Web"    { "#F59E0B" } # Oranje
-            "Link"   { "#9CA3AF" } # Grijs
-            default  { "#8B5CF6" } # Paars
+            "GitHub" { "#3B82F6" }
+            "Cmd"    { "#10B981" }
+            "Web"    { "#F59E0B" }
+            "Link"   { "#9CA3AF" }
+            default  { "#8B5CF6" }
         }
 
-        # Template met gekleurde linkerrand
         $btn.Template = [Windows.Markup.XamlReader]::Parse(
             "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='Button'>" +
             "  <Border CornerRadius='6' Background='{TemplateBinding Background}' BorderBrush='$accentColor' BorderThickness='4,0,0,0'>" +
@@ -613,7 +636,6 @@ foreach ($cat in $Categories) {
 
         $btn.Content = $grid
 
-        # Hover animatie
         $btn.Add_MouseEnter({
             $b = $_.Source
             $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1F2937")
@@ -623,7 +645,6 @@ foreach ($cat in $Categories) {
             $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161B26")
         })
 
-        # Klik event
         $btn.Add_Click({
             $clickedBtn = $_.Source
             $tName      = ($clickedBtn.Content.Children[0].Children[0]).Text
