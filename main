@@ -9,27 +9,18 @@ Add-Type -AssemblyName System.Windows.Forms
 $installDir = "$env:USERPROFILE\Downloads\AntiSSTool"
 
 # ==============================================================================
-# TOOL DATA  —  voeg hier je eigen tools toe
-# ==============================================================================
-# Ondersteunde types:
-#   "GitHub"  -> URL eindigt op /releases/latest of /releases/tag/...
-#   "Web"     -> directe .zip/.exe URL of een gewone webpagina
-#   "Cmd"     -> PowerShell commando (LET OP: alleen voor vertrouwde bronnen!)
-#   "Link"    -> opent gewoon in de browser
-#
-# Optioneel: RequireAdmin=$true om UAC-prompt te forceren
+# TOOL DATA
 # ==============================================================================
 $ToolData = @(
     @{ Name="Service Manager"; Desc="Bekijk en beheer actieve Windows services"; Category="Services"; Type="Cmd"; Command="Get-Service | Format-Table -AutoSize | Out-String -Width 200" }
 )
 
-# Categorieën die als tabs verschijnen
 $Categories = @(
     "Services"
 )
 
 # ==============================================================================
-# MAIN WINDOW XAML (FREESTYLE EDITIE)
+# MAIN WINDOW XAML
 # ==============================================================================
 [xml]$xaml = @"
 <Window
@@ -46,7 +37,6 @@ $Categories = @(
     FontFamily="Segoe UI">
 
     <Window.Resources>
-        <!-- Kleurenpalet -->
         <SolidColorBrush x:Key="MainBg"     Color="#0B0E14"/>
         <SolidColorBrush x:Key="HeaderBg"   Color="#121620"/>
         <SolidColorBrush x:Key="CardBg"     Color="#161B26"/>
@@ -56,7 +46,6 @@ $Categories = @(
         <SolidColorBrush x:Key="TextMuted"  Color="#9CA3AF"/>
         <SolidColorBrush x:Key="ConsoleBg"  Color="#05070A"/>
 
-        <!-- Stijlen voor de actie knoppen (Open, Clear, CMD) -->
         <Style x:Key="ActionBtn" TargetType="Button">
             <Setter Property="Background" Value="#1F2937"/>
             <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
@@ -83,7 +72,6 @@ $Categories = @(
             </Setter>
         </Style>
 
-        <!-- Stijlen voor de sluit/minimaliseer knoppen -->
         <Style x:Key="TitleBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
@@ -112,14 +100,13 @@ $Categories = @(
     <Border Background="{StaticResource MainBg}" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="10">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="60"/>
-                <RowDefinition Height="50"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="180"/>
+                <RowDefinition Height="60"/> <!-- Header -->
+                <RowDefinition Height="50"/> <!-- Search -->
+                <RowDefinition Height="*"/>  <!-- Tools -->
+                <RowDefinition Height="200"/> <!-- Console (Groter gemaakt) -->
             </Grid.RowDefinitions>
 
-            <!-- 1. HEADER -->
+            <!-- 1. HEADER (Emojis verwijderd) -->
             <Border Grid.Row="0" Background="{StaticResource HeaderBg}" CornerRadius="10,10,0,0" BorderBrush="#2D3748" BorderThickness="0,0,0,1">
                 <Grid Margin="20,0">
                     <Grid.ColumnDefinitions>
@@ -127,9 +114,7 @@ $Categories = @(
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     
-                    <!-- Titel met Neon Glow (LetterSpacing verwijderd - bestaat niet in WPF) -->
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="🛡️" FontSize="22" Foreground="{StaticResource Accent}" Margin="0,0,10,0"/>
                         <TextBlock Text="ANTI SS TOOL" FontSize="20" FontWeight="Black" Foreground="White">
                             <TextBlock.Effect>
                                 <DropShadowEffect Color="#8B5CF6" BlurRadius="15" ShadowDepth="0" Opacity="0.5"/>
@@ -140,43 +125,40 @@ $Categories = @(
                         </Border>
                     </StackPanel>
 
-                    <!-- Window Controls -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button x:Name="MinBtn" Style="{StaticResource TitleBtn}" Content="—"/>
-                        <Button x:Name="CloseBtn" Style="{StaticResource TitleBtn}" Content="✕"/>
+                        <Button x:Name="MinBtn" Style="{StaticResource TitleBtn}" Content="_"/>
+                        <Button x:Name="CloseBtn" Style="{StaticResource TitleBtn}" Content="X"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- 2. SEARCH & ACTIONS -->
+            <!-- 2. SEARCH & ACTIONS (Emojis verwijderd) -->
             <Grid Grid.Row="1" Background="{StaticResource HeaderBg}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <!-- Search Bar -->
                 <Border Grid.Column="0" Background="#0B0E14" CornerRadius="6" Margin="20,8" Padding="10,0" BorderBrush="#2D3748" BorderThickness="1">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="🔍" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
+                        <TextBlock Text="Search:" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
                         <TextBox x:Name="SearchBox" Grid.Column="1" Background="Transparent" BorderThickness="0"
                                  Foreground="White" FontSize="12" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
 
-                <!-- Action Buttons -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,8,20,8">
-                    <Button x:Name="OpenFolderBtn" Style="{StaticResource ActionBtn}" Content="📂 Open"/>
-                    <Button x:Name="ClearCacheBtn" Style="{StaticResource ActionBtn}" Content="🗑️ Clear"/>
-                    <Button x:Name="OpenCmdBtn"    Style="{StaticResource ActionBtn}" Content="💻 CMD"/>
+                    <Button x:Name="OpenFolderBtn" Style="{StaticResource ActionBtn}" Content="Open"/>
+                    <Button x:Name="ClearCacheBtn" Style="{StaticResource ActionBtn}" Content="Clear"/>
+                    <Button x:Name="OpenCmdBtn"    Style="{StaticResource ActionBtn}" Content="CMD"/>
                 </StackPanel>
             </Grid>
 
-            <!-- 3. TOOLS AREA (TABS) -->
+            <!-- 3. TOOLS AREA -->
             <Grid Grid.Row="2" Margin="20,10,20,10">
                 <TabControl x:Name="ToolsTab" Background="Transparent" BorderThickness="0">
                     <TabControl.Resources>
@@ -216,26 +198,8 @@ $Categories = @(
                 </TabControl>
             </Grid>
 
-            <!-- 4. STATUS BAR -->
-            <Border Grid.Row="3" Background="{StaticResource CardBg}" CornerRadius="6" Margin="20,0,20,10" Padding="15,10" BorderBrush="#2D3748" BorderThickness="1">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{StaticResource Accent}" Margin="0,0,10,0"/>
-                        <TextBlock x:Name="StatusTitle" Text="Systeem Gereed" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="StatusSub" Text="Selecteer een tool om te starten." FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="15,0,0,0"/>
-                    </StackPanel>
-                    <Border Grid.Column="1" Background="#1F2937" CornerRadius="4" Padding="10,2" VerticalAlignment="Center">
-                        <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="10" FontWeight="Black" Foreground="{StaticResource AccentGlow}"/>
-                    </Border>
-                </Grid>
-            </Border>
-
-            <!-- 5. CONSOLE -->
-            <Border Grid.Row="4" Background="{StaticResource ConsoleBg}" CornerRadius="0,0,10,10" Padding="20,15" BorderBrush="#2D3748" BorderThickness="0,1,0,0">
+            <!-- 4. CONSOLE (Statusbalk is weg, console is nu Row 3 en groter) -->
+            <Border Grid.Row="3" Background="{StaticResource ConsoleBg}" CornerRadius="0,0,10,10" Padding="20,15" BorderBrush="#2D3748" BorderThickness="0,1,0,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -243,7 +207,7 @@ $Categories = @(
                     </Grid.RowDefinitions>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                         <TextBlock Text="TERMINAL" FontSize="10" FontWeight="Black" Foreground="{StaticResource Accent}" FontFamily="Consolas"/>
-                        <TextBlock Text=" — log output" FontSize="10" Foreground="{StaticResource TextMuted}" FontFamily="Consolas"/>
+                        <TextBlock Text=" - log output" FontSize="10" Foreground="{StaticResource TextMuted}" FontFamily="Consolas"/>
                     </StackPanel>
                     <TextBox x:Name="LogBox" Grid.Row="1"
                         Background="Transparent"
@@ -265,12 +229,9 @@ $Categories = @(
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [Windows.Markup.XamlReader]::Load($reader)
 
+# Alleen de elementen die nog bestaan
 $MinBtn        = $window.FindName("MinBtn")
 $CloseBtn      = $window.FindName("CloseBtn")
-$StatusTitle   = $window.FindName("StatusTitle")
-$StatusSub     = $window.FindName("StatusSub")
-$StatusBadge   = $window.FindName("StatusBadge")
-$StatusDot     = $window.FindName("StatusDot")
 $LogBox        = $window.FindName("LogBox")
 $ToolsTab      = $window.FindName("ToolsTab")
 $OpenFolderBtn = $window.FindName("OpenFolderBtn")
@@ -290,22 +251,14 @@ function Write-Log {
     })
 }
 
-function Set-Status {
-    param($title, $sub, $badge = "BUSY", $color = "#8B5CF6")
-    $window.Dispatcher.Invoke([Action]{
-        $StatusTitle.Text = $title
-        $StatusSub.Text   = $sub
-        $StatusBadge.Text = $badge
-        $StatusDot.Fill   = [Windows.Media.BrushConverter]::new().ConvertFrom($color)
-    })
-}
+# Dummy functie zodat de achtergrond-taken niet crashen nu de statusbalk weg is
+function Set-Status { param($title, $sub, $badge, $color) }
 
 function Start-AppOrScript {
     param(
         [Parameter(Mandatory=$true)][string]$Path,
         [string]$WorkingDirectory
     )
-
     if (-not $WorkingDirectory) { $WorkingDirectory = Split-Path -Parent $Path }
     $extension = [System.IO.Path]::GetExtension($Path).ToLowerInvariant()
     $quotedPath = '"' + $Path + '"'
@@ -317,21 +270,17 @@ function Start-AppOrScript {
     }
 }
 
-# GEFIXT: PowerShell direct starten ipv via cmd.exe + RunAs (faalde stilletjes)
 function Start-CmdToolCommand {
     param(
         [Parameter(Mandatory=$true)][string]$Command,
         [switch]$RequireAdmin
     )
-
     $header = "# Anti SS Tool`n# Commando: $Command`n# ----------------------------------------`n`n"
     $tempScript = [System.IO.Path]::Combine($env:TEMP, "toolkit_$([guid]::NewGuid().ToString('N')).ps1")
     Set-Content -LiteralPath $tempScript -Value ($header + $Command) -Encoding UTF8 -Force
 
     $psArgs = @(
-        "-NoLogo",
-        "-NoExit",
-        "-NoProfile",
+        "-NoLogo", "-NoExit", "-NoProfile",
         "-ExecutionPolicy", "Bypass",
         "-File", "`"$tempScript`""
     )
@@ -344,15 +293,11 @@ function Start-CmdToolCommand {
         }
     } catch {
         Write-Log "Kon Cmd-tool niet starten: $($_.Exception.Message)"
-        Set-Status "Error" "Cmd kon niet starten." "ERR" "#EF4444"
     }
 }
 
 function Save-UrlToFile {
-    param(
-        [Parameter(Mandatory=$true)][string]$Uri,
-        [Parameter(Mandatory=$true)][string]$OutFile
-    )
+    param([string]$Uri, [string]$OutFile)
     $tempFile = "$OutFile.download"
     if (Test-Path -LiteralPath $tempFile) { Remove-Item -LiteralPath $tempFile -Force -ErrorAction SilentlyContinue }
     try {
@@ -365,10 +310,7 @@ function Save-UrlToFile {
 }
 
 function Start-DownloadedTool {
-    param(
-        [Parameter(Mandatory=$true)][string]$Directory,
-        [string]$PreferredFile
-    )
+    param([string]$Directory, [string]$PreferredFile)
     if ($PreferredFile -and (Test-Path -LiteralPath $PreferredFile) -and ($PreferredFile -notmatch "\.zip$")) {
         Write-Log "Launching $(Split-Path -Leaf $PreferredFile)"
         Start-AppOrScript -Path $PreferredFile -WorkingDirectory (Split-Path -Parent $PreferredFile)
@@ -419,21 +361,17 @@ function Invoke-ToolAction {
 
     if ($type -eq "Link") {
         Write-Log "Opening $name in browser."
-        Set-Status "Browser" "Opening $name..." "IDLE" "#3B82F6"
         Start-Process $tool.URL
         return
     }
 
     if ($type -eq "Cmd") {
         Write-Log "Starting $name..."
-        Set-Status "Running" "Launching $name..." "BUSY" "#F59E0B"
         $admin = if ($tool.RequireAdmin) { $true } else { $false }
         Start-CmdToolCommand -Command $tool.Command -RequireAdmin:$admin
-        Set-Status "Gereed" "$name launched." "IDLE" "#10B981"
         return
     }
 
-    Set-Status "Downloading" "Fetching $name..." "BUSY" "#8B5CF6"
     Write-Log "Starting download: $name"
 
     $rs = [runspacefactory]::CreateRunspace()
@@ -444,24 +382,11 @@ function Invoke-ToolAction {
     $rs.SessionStateProxy.SetVariable("tData", $tool)
     $rs.SessionStateProxy.SetVariable("installDir", $installDir)
     $rs.SessionStateProxy.SetVariable("dispatcher", $window.Dispatcher)
-    $rs.SessionStateProxy.SetVariable("StatusTitle", $StatusTitle)
-    $rs.SessionStateProxy.SetVariable("StatusSub",   $StatusSub)
-    $rs.SessionStateProxy.SetVariable("StatusBadge", $StatusBadge)
-    $rs.SessionStateProxy.SetVariable("StatusDot",   $StatusDot)
     $rs.SessionStateProxy.SetVariable("LogBox",      $LogBox)
 
     $ps = [powershell]::Create()
     $ps.Runspace = $rs
     $null = $ps.AddScript({
-        function Set-StatusBg {
-            param($title, $sub, $badge, $color)
-            $dispatcher.Invoke([Action]{
-                $StatusTitle.Text = $title
-                $StatusSub.Text   = $sub
-                $StatusBadge.Text = $badge
-                if ($color) { $StatusDot.Fill = [Windows.Media.BrushConverter]::new().ConvertFrom($color) }
-            })
-        }
         function Write-LogBg {
             param($msg)
             $dispatcher.Invoke([Action]{
@@ -505,9 +430,8 @@ function Invoke-ToolAction {
             if ($type -eq "GitHub") {
                 $assetInfo = Get-GitHubAssetUrlBg -ReleaseUrl $url
                 if (-not $assetInfo) {
-                    Write-LogBg "No .exe/.zip/.cmd/.bat asset found - opening browser."
+                    Write-LogBg "No asset found - opening browser."
                     Start-Process $url
-                    Set-StatusBg "Gereed" "Opened GitHub page." "IDLE" "#10B981"
                     return
                 }
                 $dlUrl = $assetInfo.url
@@ -541,11 +465,8 @@ function Invoke-ToolAction {
                 Write-LogBg "Launching $fileName..."
                 Start-Process -FilePath $destFile -Verb RunAs
             }
-
-            Set-StatusBg "Gereed" "$name launched successfully." "IDLE" "#10B981"
         } catch {
             Write-LogBg "Error: $_"
-            Set-StatusBg "Error" "Something went wrong with $name." "ERR" "#EF4444"
         } finally {
             $rs.Close()
         }
@@ -636,14 +557,8 @@ foreach ($cat in $Categories) {
 
         $btn.Content = $grid
 
-        $btn.Add_MouseEnter({
-            $b = $_.Source
-            $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1F2937")
-        })
-        $btn.Add_MouseLeave({
-            $b = $_.Source
-            $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161B26")
-        })
+        $btn.Add_MouseEnter({ $_.Source.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1F2937") })
+        $btn.Add_MouseLeave({ $_.Source.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161B26") })
 
         $btn.Add_Click({
             $clickedBtn = $_.Source
@@ -735,7 +650,7 @@ $SearchBox.Add_TextChanged({
         $nameBlock.FontWeight = "Bold"
         $nameBlock.Foreground = [Windows.Media.Brushes]::White
         $descBlock = New-Object System.Windows.Controls.TextBlock
-        $descBlock.Text = "$($tool.Desc)  •  $($tool.Category)"
+        $descBlock.Text = "$($tool.Desc)  -  $($tool.Category)"
         $descBlock.FontSize = 11
         $descBlock.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#9CA3AF")
         $descBlock.Margin = "0,2,0,0"
@@ -795,7 +710,6 @@ $ClearCacheBtn.Add_Click({
         $count = @($items).Count
         $items | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
         Write-Log "Cleared $count item(s) from install folder."
-        Set-Status "Systeem Schoon" "Verwijderde gedownloade bestanden." "IDLE" "#10B981"
     } else {
         Write-Log "Nothing to clear - install folder does not exist yet."
     }
@@ -809,6 +723,5 @@ $OpenCmdBtn.Add_Click({
 Write-Log "Systeem geinitialiseerd."
 Write-Log "Opslaglocatie: $installDir"
 Write-Log "Wachten op input..."
-Set-Status "Systeem Gereed" "Klik op een tool in de Services tab." "IDLE" "#10B981"
 
 $window.ShowDialog() | Out-Null
