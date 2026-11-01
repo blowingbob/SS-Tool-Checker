@@ -6,7 +6,7 @@ Add-Type -AssemblyName System.Windows.Forms
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$installDir = "$env:USERPROFILE\Downloads\MyToolkit"
+$installDir = "$env:USERPROFILE\Downloads\AntiSSTool"
 
 # ==============================================================================
 # TOOL DATA  —  voeg hier je eigen tools toe
@@ -37,7 +37,7 @@ $Categories = @(
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="My Toolkit"
+    Title="Anti SS Tool"
     Width="900" Height="800"
     MinWidth="900" MinHeight="800"
     WindowStartupLocation="CenterScreen"
@@ -121,9 +121,9 @@ $Categories = @(
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="[&gt;]" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Accent}" FontFamily="Consolas"/>
-                        <TextBlock Text="  My Toolkit" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
-                        <TextBlock Text="  -  template" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                        <!-- Aangepaste Titel zonder logo -->
+                        <TextBlock Text="Anti SS Tool" FontSize="18" FontWeight="Black" Foreground="{StaticResource Accent}"/>
+                        <TextBlock Text="  -  by blowingbob" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="6,0,0,0"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                         <Button x:Name="MinBtn"   Style="{StaticResource TitleBtn}" Content="_"/>
