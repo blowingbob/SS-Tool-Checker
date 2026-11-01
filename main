@@ -11,35 +11,24 @@ $installDir = "$env:USERPROFILE\Downloads\AntiSSTool"
 # ==============================================================================
 # TOOL DATA  —  voeg hier je eigen tools toe
 # ==============================================================================
-# Ondersteunde types:
-#   "GitHub"  -> URL eindigt op /releases/latest of /releases/tag/...
-#   "Web"     -> directe .zip/.exe URL of een gewone webpagina
-#   "Cmd"     -> PowerShell commando (LET OP: alleen voor vertrouwde bronnen!)
-#   "Link"    -> opent gewoon in de browser
-#
-# Voorbeeld:
-# @{ Name="Voorbeeld"; Desc="Beschrijving van de tool"; Category="MijnTools";
-#    Type="GitHub"; URL="https://github.com/user/repo/releases/latest" }
-# ==============================================================================
 $ToolData = @(
     # Leeg — voeg je eigen tools hier toe
 )
 
-# Categorieën die als tabs verschijnen (moeten overeenkomen met Category-waarden hierboven)
 $Categories = @(
     # "MijnTools"
 )
 
 # ==============================================================================
-# MAIN WINDOW XAML
+# MAIN WINDOW XAML (FREESTYLE EDITIE)
 # ==============================================================================
 [xml]$xaml = @"
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="Anti SS Tool"
-    Width="900" Height="800"
-    MinWidth="900" MinHeight="800"
+    Width="950" Height="850"
+    MinWidth="950" MinHeight="850"
     WindowStartupLocation="CenterScreen"
     ResizeMode="NoResize"
     WindowStyle="None"
@@ -48,31 +37,36 @@ $Categories = @(
     FontFamily="Segoe UI">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="MainBg"     Color="#0A0D1E"/>
-        <SolidColorBrush x:Key="SidebarBg"  Color="#0F1329"/>
-        <SolidColorBrush x:Key="CardBg"     Color="#181C38"/>
+        <!-- Kleurenpalet -->
+        <SolidColorBrush x:Key="MainBg"     Color="#0B0E14"/>
+        <SolidColorBrush x:Key="HeaderBg"   Color="#121620"/>
+        <SolidColorBrush x:Key="CardBg"     Color="#161B26"/>
         <SolidColorBrush x:Key="Accent"     Color="#8B5CF6"/>
-        <SolidColorBrush x:Key="AccentDim"  Color="#7C3AED"/>
-        <SolidColorBrush x:Key="TextMain"   Color="#E6E8FF"/>
-        <SolidColorBrush x:Key="TextMuted"  Color="#7B7FA8"/>
-        <SolidColorBrush x:Key="ConsoleBg"  Color="#05070E"/>
+        <SolidColorBrush x:Key="AccentGlow" Color="#A855F7"/>
+        <SolidColorBrush x:Key="TextMain"   Color="#F3F4F6"/>
+        <SolidColorBrush x:Key="TextMuted"  Color="#9CA3AF"/>
+        <SolidColorBrush x:Key="ConsoleBg"  Color="#05070A"/>
 
-        <Style x:Key="SideBtn" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
+        <!-- Stijlen voor de actie knoppen (Open, Clear, CMD) -->
+        <Style x:Key="ActionBtn" TargetType="Button">
+            <Setter Property="Background" Value="#1F2937"/>
             <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
             <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Height" Value="30"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="32"/>
             <Setter Property="Margin" Value="4,0"/>
+            <Setter Property="Padding" Value="12,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="3">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="8,0"/>
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6" BorderBrush="#374151" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#2A1F4A"/>
+                                <Setter Property="Background" Value="{StaticResource Accent}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentGlow}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -80,23 +74,24 @@ $Categories = @(
             </Setter>
         </Style>
 
+        <!-- Stijlen voor de sluit/minimaliseer knoppen -->
         <Style x:Key="TitleBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="36"/>
+            <Setter Property="Width" Value="45"/>
+            <Setter Property="Height" Value="40"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="0,0,0,8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#338B5CF6"/>
-                                <Setter Property="Foreground" Value="#8B5CF6"/>
+                                <Setter Property="Background" Value="#EF4444"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -105,145 +100,153 @@ $Categories = @(
         </Style>
     </Window.Resources>
 
-    <Border Background="{StaticResource MainBg}" BorderBrush="#3D2F6B" BorderThickness="1" CornerRadius="8">
+    <Border Background="{StaticResource MainBg}" BorderBrush="#2D3748" BorderThickness="1" CornerRadius="10">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="42"/>
-                <RowDefinition Height="48"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="60"/> <!-- Header -->
+                <RowDefinition Height="50"/> <!-- Search & Actions -->
+                <RowDefinition Height="*"/>  <!-- Tools Area -->
+                <RowDefinition Height="Auto"/> <!-- Status Bar -->
+                <RowDefinition Height="180"/> <!-- Console -->
             </Grid.RowDefinitions>
 
-            <!-- Title Bar -->
-            <Border Grid.Row="0" Background="{StaticResource SidebarBg}" CornerRadius="8,8,0,0">
-                <Grid Margin="16,0">
+            <!-- 1. HEADER -->
+            <Border Grid.Row="0" Background="{StaticResource HeaderBg}" CornerRadius="10,10,0,0" BorderBrush="#2D3748" BorderThickness="0,0,0,1">
+                <Grid Margin="20,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Titel met Neon Glow -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="🛡️" FontSize="22" Foreground="{StaticResource Accent}" Margin="0,0,10,0"/>
+                        <TextBlock Text="ANTI SS TOOL" FontSize="20" FontWeight="Black" Foreground="White" LetterSpacing="2">
+                            <TextBlock.Effect>
+                                <DropShadowEffect Color="#8B5CF6" BlurRadius="15" ShadowDepth="0" Opacity="0.5"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                        <Border Background="#1F2937" CornerRadius="4" Padding="8,2" Margin="15,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="made by blowingbob" FontSize="10" Foreground="{StaticResource TextMuted}" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Window Controls -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button x:Name="MinBtn" Style="{StaticResource TitleBtn}" Content="—"/>
+                        <Button x:Name="CloseBtn" Style="{StaticResource TitleBtn}" Content="✕"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 2. SEARCH & ACTIONS -->
+            <Grid Grid.Row="1" Background="{StaticResource HeaderBg}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Search Bar -->
+                <Border Grid.Column="0" Background="#0B0E14" CornerRadius="6" Margin="20,8" Padding="10,0" BorderBrush="#2D3748" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="🔍" FontSize="12" VerticalAlignment="Center" Foreground="{StaticResource TextMuted}" Margin="0,0,8,0"/>
+                        <TextBox x:Name="SearchBox" Grid.Column="1" Background="Transparent" BorderThickness="0"
+                                 Foreground="White" FontSize="12" VerticalContentAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,8,20,8">
+                    <Button x:Name="OpenFolderBtn" Style="{StaticResource ActionBtn}" Content="📂 Open"/>
+                    <Button x:Name="ClearCacheBtn" Style="{StaticResource ActionBtn}" Content="🗑️ Clear"/>
+                    <Button x:Name="OpenCmdBtn"    Style="{StaticResource ActionBtn}" Content="💻 CMD"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- 3. TOOLS AREA (TABS) -->
+            <Grid Grid.Row="2" Margin="20,10,20,10">
+                <TabControl x:Name="ToolsTab" Background="Transparent" BorderThickness="0">
+                    <TabControl.Resources>
+                        <Style TargetType="TabItem">
+                            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
+                            <Setter Property="FontSize" Value="12"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="16,8"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TabItem">
+                                        <Border x:Name="TabBorder" Background="Transparent" CornerRadius="6,6,0,0" Margin="0,0,4,0" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource CardBg}"/>
+                                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                                <Setter TargetName="TabBorder" Property="BorderThickness" Value="0,0,0,2"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </Trigger>
+                                            <MultiTrigger>
+                                                <MultiTrigger.Conditions>
+                                                    <Condition Property="IsMouseOver" Value="True"/>
+                                                    <Condition Property="IsSelected" Value="False"/>
+                                                </MultiTrigger.Conditions>
+                                                <Setter TargetName="TabBorder" Property="Background" Value="#1A1F2E"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                            </MultiTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TabControl.Resources>
+                </TabControl>
+            </Grid>
+
+            <!-- 4. STATUS BAR -->
+            <Border Grid.Row="3" Background="{StaticResource CardBg}" CornerRadius="6" Margin="20,0,20,10" Padding="15,10" BorderBrush="#2D3748" BorderThickness="1">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Aangepaste Titel: wit en zonder streepje -->
-                        <TextBlock Text="Anti SS Tool" FontSize="18" FontWeight="Black" Foreground="White"/>
-                        <TextBlock Text="made by blowingbob" FontSize="11" Foreground="White" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.8"/>
+                        <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{StaticResource Accent}" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="StatusTitle" Text="Systeem Gereed" FontSize="14" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="StatusSub" Text="Selecteer een tool om te starten." FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="15,0,0,0"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button x:Name="MinBtn"   Style="{StaticResource TitleBtn}" Content="_"/>
-                        <Button x:Name="CloseBtn" Style="{StaticResource TitleBtn}" Content="X"/>
-                    </StackPanel>
+                    <Border Grid.Column="1" Background="#1F2937" CornerRadius="4" Padding="10,2" VerticalAlignment="Center">
+                        <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="10" FontWeight="Black" Foreground="{StaticResource AccentGlow}"/>
+                    </Border>
                 </Grid>
             </Border>
 
-            <!-- Search + Action Buttons Row -->
-            <Grid Grid.Row="1" Background="{StaticResource SidebarBg}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Border Grid.Column="0" Background="{StaticResource MainBg}" CornerRadius="4" Margin="10,6" Padding="6,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Search:" FontSize="11" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                        <TextBox x:Name="SearchBox" Grid.Column="1" Background="Transparent" BorderThickness="0"
-                                 Foreground="{StaticResource TextMain}" FontSize="12" VerticalContentAlignment="Center"
-                                 VerticalAlignment="Center" />
-                    </Grid>
-                </Border>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,6">
-                    <Button x:Name="OpenFolderBtn" Style="{StaticResource SideBtn}" Content="Open"/>
-                    <Button x:Name="ClearCacheBtn" Style="{StaticResource SideBtn}" Content="Clear"/>
-                    <Button x:Name="OpenCmdBtn"    Style="{StaticResource SideBtn}" Content="CMD"/>
-                </StackPanel>
-            </Grid>
-
-            <!-- Main content area -->
-            <Grid Grid.Row="2" Margin="16,14,16,14">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="10"/>
-                    <RowDefinition Height="160"/>
-                </Grid.RowDefinitions>
-
-                <!-- Status card -->
-                <Border Grid.Row="0" Background="{StaticResource CardBg}" CornerRadius="6" Padding="16,10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock x:Name="StatusTitle" Text="Ready" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource TextMain}"/>
-                            <TextBlock x:Name="StatusSub"   Text="Select a tool to launch or download it." FontSize="11" Foreground="{StaticResource TextMuted}"/>
-                        </StackPanel>
-                        <Border Grid.Column="1" Background="#2A1F4A" CornerRadius="4" Padding="10,4" VerticalAlignment="Center">
-                            <TextBlock x:Name="StatusBadge" Text="IDLE" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
-                        </Border>
-                    </Grid>
-                </Border>
-
-                <!-- Container for tabs or search results -->
-                <Grid Grid.Row="2" x:Name="ContentHost" Background="{StaticResource CardBg}">
-                    <Border Padding="8">
-                        <TabControl x:Name="ToolsTab" Background="Transparent" BorderThickness="0" Padding="0">
-                            <TabControl.Resources>
-                                <Style TargetType="TabItem">
-                                    <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
-                                    <Setter Property="FontSize" Value="11"/>
-                                    <Setter Property="Padding" Value="12,6"/>
-                                    <Setter Property="Cursor" Value="Hand"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="TabItem">
-                                                <Border x:Name="TabBorder" Background="Transparent" CornerRadius="4" Margin="3,4,3,0" Padding="12,5">
-                                                    <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsSelected" Value="True">
-                                                        <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource Accent}"/>
-                                                        <Setter Property="Foreground" Value="#FFFFFF"/>
-                                                    </Trigger>
-                                                    <MultiTrigger>
-                                                        <MultiTrigger.Conditions>
-                                                            <Condition Property="IsMouseOver" Value="True"/>
-                                                            <Condition Property="IsSelected" Value="False"/>
-                                                        </MultiTrigger.Conditions>
-                                                        <Setter TargetName="TabBorder" Property="Background" Value="#2A1F4A"/>
-                                                        <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
-                                                    </MultiTrigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </TabControl.Resources>
-                        </TabControl>
-                    </Border>
+            <!-- 5. CONSOLE -->
+            <Border Grid.Row="4" Background="{StaticResource ConsoleBg}" CornerRadius="0,0,10,10" Padding="20,15" BorderBrush="#2D3748" BorderThickness="0,1,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="TERMINAL" FontSize="10" FontWeight="Black" Foreground="{StaticResource Accent}" FontFamily="Consolas"/>
+                        <TextBlock Text=" — log output" FontSize="10" Foreground="{StaticResource TextMuted}" FontFamily="Consolas"/>
+                    </StackPanel>
+                    <TextBox x:Name="LogBox" Grid.Row="1"
+                        Background="Transparent"
+                        Foreground="{StaticResource AccentGlow}"
+                        BorderThickness="0"
+                        FontFamily="Consolas"
+                        FontSize="12"
+                        IsReadOnly="True"
+                        VerticalScrollBarVisibility="Auto"
+                        TextWrapping="Wrap"/>
                 </Grid>
-
-                <!-- Console -->
-                <Border Grid.Row="4" Background="{StaticResource ConsoleBg}" CornerRadius="6" Padding="12,8">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <TextBlock Text="ACTIVITY CONSOLE" FontSize="9" FontWeight="Bold" Foreground="#4C3D8F" FontFamily="Consolas" Margin="0,0,0,4"/>
-                        <TextBox x:Name="LogBox"
-                            Grid.Row="1"
-                            Background="Transparent"
-                            Foreground="{StaticResource Accent}"
-                            BorderThickness="0"
-                            FontFamily="Consolas"
-                            FontSize="11"
-                            IsReadOnly="True"
-                            VerticalScrollBarVisibility="Auto"
-                            TextWrapping="Wrap"/>
-                    </Grid>
-                </Border>
-            </Grid>
+            </Border>
         </Grid>
     </Border>
 </Window>
@@ -258,13 +261,13 @@ $CloseBtn      = $window.FindName("CloseBtn")
 $StatusTitle   = $window.FindName("StatusTitle")
 $StatusSub     = $window.FindName("StatusSub")
 $StatusBadge   = $window.FindName("StatusBadge")
+$StatusDot     = $window.FindName("StatusDot")
 $LogBox        = $window.FindName("LogBox")
 $ToolsTab      = $window.FindName("ToolsTab")
 $OpenFolderBtn = $window.FindName("OpenFolderBtn")
 $ClearCacheBtn = $window.FindName("ClearCacheBtn")
 $OpenCmdBtn    = $window.FindName("OpenCmdBtn")
 $SearchBox     = $window.FindName("SearchBox")
-$ContentHost   = $window.FindName("ContentHost")
 
 # ==============================================================================
 # HELPER FUNCTIONS
@@ -279,11 +282,12 @@ function Write-Log {
 }
 
 function Set-Status {
-    param($title, $sub, $badge = "BUSY")
+    param($title, $sub, $badge = "BUSY", $color = "#8B5CF6")
     $window.Dispatcher.Invoke([Action]{
         $StatusTitle.Text = $title
         $StatusSub.Text   = $sub
         $StatusBadge.Text = $badge
+        $StatusDot.Fill   = [Windows.Media.BrushConverter]::new().ConvertFrom($color)
     })
 }
 
@@ -295,7 +299,6 @@ function Start-AppOrScript {
 
     if (-not $WorkingDirectory) { $WorkingDirectory = Split-Path -Parent $Path }
     $extension = [System.IO.Path]::GetExtension($Path).ToLowerInvariant()
-
     $quotedPath = '"' + $Path + '"'
 
     switch ($extension) {
@@ -307,10 +310,8 @@ function Start-AppOrScript {
 
 function Start-CmdToolCommand {
     param([Parameter(Mandatory=$true)][string]$Command)
-
     $tempScript = [System.IO.Path]::Combine($env:TEMP, "toolkit_$([guid]::NewGuid().ToString('N')).ps1")
     Set-Content -LiteralPath $tempScript -Value $Command -Encoding UTF8 -Force
-
     $startArgs = '/c start "Toolkit" powershell.exe -NoExit -NoProfile -ExecutionPolicy Bypass -File "' + $tempScript + '"'
     Start-Process -FilePath "cmd.exe" -ArgumentList $startArgs -WindowStyle Hidden -Verb RunAs
 }
@@ -320,10 +321,8 @@ function Save-UrlToFile {
         [Parameter(Mandatory=$true)][string]$Uri,
         [Parameter(Mandatory=$true)][string]$OutFile
     )
-
     $tempFile = "$OutFile.download"
     if (Test-Path -LiteralPath $tempFile) { Remove-Item -LiteralPath $tempFile -Force -ErrorAction SilentlyContinue }
-
     try {
         Invoke-WebRequest -Uri $Uri -OutFile $tempFile -UserAgent "Toolkit" -ErrorAction Stop
         if (Test-Path -LiteralPath $OutFile) { Remove-Item -LiteralPath $OutFile -Force -ErrorAction Stop }
@@ -338,24 +337,20 @@ function Start-DownloadedTool {
         [Parameter(Mandatory=$true)][string]$Directory,
         [string]$PreferredFile
     )
-
     if ($PreferredFile -and (Test-Path -LiteralPath $PreferredFile) -and ($PreferredFile -notmatch "\.zip$")) {
         Write-Log "Launching $(Split-Path -Leaf $PreferredFile)"
         Start-AppOrScript -Path $PreferredFile -WorkingDirectory (Split-Path -Parent $PreferredFile)
         return $true
     }
-
     $launchable = Get-ChildItem -Path $Directory -Recurse -File -ErrorAction SilentlyContinue |
         Where-Object { $_.Extension -match "^\.(exe|cmd|bat)$" } |
         Sort-Object @{ Expression = { if ($_.Extension -eq ".exe") { 0 } else { 1 } } }, FullName |
         Select-Object -First 1
-
     if ($launchable) {
         Write-Log "Launching $($launchable.Name)"
         Start-AppOrScript -Path $launchable.FullName -WorkingDirectory $launchable.DirectoryName
         return $true
     }
-
     Write-Log "No .exe, .cmd, or .bat found - opening folder."
     Start-Process -FilePath explorer.exe -ArgumentList "`"$Directory`""
     return $false
@@ -363,7 +358,6 @@ function Start-DownloadedTool {
 
 function Get-GitHubAssetUrl {
     param([string]$ReleaseUrl)
-
     if ($ReleaseUrl -match "github\.com/([^/]+)/([^/]+)/releases/latest$") {
         $user = $Matches[1]; $repo = $Matches[2]
         $api  = "https://api.github.com/repos/$user/$repo/releases/latest"
@@ -371,9 +365,7 @@ function Get-GitHubAssetUrl {
             $rel   = Invoke-RestMethod -Uri $api -Headers @{"User-Agent"="Toolkit"} -ErrorAction Stop
             $asset = $rel.assets | Where-Object { $_.name -match "\.(exe|zip|cmd|bat)$" } | Select-Object -First 1
             if ($asset) { return @{ url=$asset.browser_download_url; name=$asset.name } }
-        } catch {
-            Write-Log "GitHub lookup failed: $($_.Exception.Message)"
-        }
+        } catch { Write-Log "GitHub lookup failed: $($_.Exception.Message)" }
     }
     elseif ($ReleaseUrl -match "github\.com/([^/]+)/([^/]+)/releases/tag/(.+)$") {
         $user = $Matches[1]; $repo = $Matches[2]
@@ -383,11 +375,8 @@ function Get-GitHubAssetUrl {
             $rel   = Invoke-RestMethod -Uri $api -Headers @{"User-Agent"="Toolkit"} -ErrorAction Stop
             $asset = $rel.assets | Where-Object { $_.name -match "\.(exe|zip|cmd|bat)$" } | Select-Object -First 1
             if ($asset) { return @{ url=$asset.browser_download_url; name=$asset.name } }
-        } catch {
-            Write-Log "GitHub lookup failed: $($_.Exception.Message)"
-        }
+        } catch { Write-Log "GitHub lookup failed: $($_.Exception.Message)" }
     }
-
     return $null
 }
 
@@ -398,20 +387,20 @@ function Invoke-ToolAction {
 
     if ($type -eq "Link") {
         Write-Log "Opening $name in browser."
-        Set-Status "Browser" "Opening $name..." "IDLE"
+        Set-Status "Browser" "Opening $name..." "IDLE" "#3B82F6"
         Start-Process $tool.URL
         return
     }
 
     if ($type -eq "Cmd") {
         Write-Log "Starting $name..."
-        Set-Status "Running" "Launching $name..." "BUSY"
+        Set-Status "Running" "Launching $name..." "BUSY" "#F59E0B"
         Start-CmdToolCommand -Command $tool.Command
-        Set-Status "Ready" "$name launched." "IDLE"
+        Set-Status "Gereed" "$name launched." "IDLE" "#10B981"
         return
     }
 
-    Set-Status "Downloading" "Fetching $name..." "BUSY"
+    Set-Status "Downloading" "Fetching $name..." "BUSY" "#8B5CF6"
     Write-Log "Starting download: $name"
 
     $rs = [runspacefactory]::CreateRunspace()
@@ -425,17 +414,19 @@ function Invoke-ToolAction {
     $rs.SessionStateProxy.SetVariable("StatusTitle", $StatusTitle)
     $rs.SessionStateProxy.SetVariable("StatusSub",   $StatusSub)
     $rs.SessionStateProxy.SetVariable("StatusBadge", $StatusBadge)
+    $rs.SessionStateProxy.SetVariable("StatusDot",   $StatusDot)
     $rs.SessionStateProxy.SetVariable("LogBox",      $LogBox)
 
     $ps = [powershell]::Create()
     $ps.Runspace = $rs
     $null = $ps.AddScript({
         function Set-StatusBg {
-            param($title, $sub, $badge)
+            param($title, $sub, $badge, $color)
             $dispatcher.Invoke([Action]{
                 $StatusTitle.Text = $title
                 $StatusSub.Text   = $sub
                 $StatusBadge.Text = $badge
+                if ($color) { $StatusDot.Fill = [Windows.Media.BrushConverter]::new().ConvertFrom($color) }
             })
         }
         function Write-LogBg {
@@ -483,7 +474,7 @@ function Invoke-ToolAction {
                 if (-not $assetInfo) {
                     Write-LogBg "No .exe/.zip/.cmd/.bat asset found - opening browser."
                     Start-Process $url
-                    Set-StatusBg "Ready" "Opened GitHub page." "IDLE"
+                    Set-StatusBg "Gereed" "Opened GitHub page." "IDLE" "#10B981"
                     return
                 }
                 $dlUrl = $assetInfo.url
@@ -518,10 +509,10 @@ function Invoke-ToolAction {
                 Start-Process -FilePath $destFile -Verb RunAs
             }
 
-            Set-StatusBg "Ready" "$name launched successfully." "IDLE"
+            Set-StatusBg "Gereed" "$name launched successfully." "IDLE" "#10B981"
         } catch {
             Write-LogBg "Error: $_"
-            Set-StatusBg "Error" "Something went wrong with $name." "ERR"
+            Set-StatusBg "Error" "Something went wrong with $name." "ERR" "#EF4444"
         } finally {
             $rs.Close()
         }
@@ -532,9 +523,7 @@ function Invoke-ToolAction {
 # ==============================================================================
 # GENERATE TOOL CARDS
 # ==============================================================================
-$cardBrush   = [Windows.Media.BrushConverter]::new().ConvertFrom("#181C38")
-$accentBrush = [Windows.Media.BrushConverter]::new().ConvertFrom("#8B5CF6")
-$textBrush   = [Windows.Media.BrushConverter]::new().ConvertFrom("#E6E8FF")
+$textBrush = [Windows.Media.BrushConverter]::new().ConvertFrom("#F3F4F6")
 
 foreach ($cat in $Categories) {
     $tab = New-Object System.Windows.Controls.TabItem
@@ -543,31 +532,40 @@ foreach ($cat in $Categories) {
     $scroll = New-Object System.Windows.Controls.ScrollViewer
     $scroll.VerticalScrollBarVisibility = "Auto"
     $scroll.HorizontalScrollBarVisibility = "Disabled"
+    $scroll.Margin = "0,10,0,0"
 
     $stack = New-Object System.Windows.Controls.StackPanel
-    $stack.Margin = "8"
-
     $catTools = $ToolData | Where-Object { $_.Category -eq $cat }
 
     foreach ($tool in $catTools) {
         $t = $tool
 
         $btn = New-Object System.Windows.Controls.Button
-        $btn.Height = 60
-        $btn.Margin = "0,0,0,4"
+        $btn.Height = 65
+        $btn.Margin = "0,0,0,8"
         $btn.Cursor = "Hand"
         $btn.Foreground = $textBrush
-        $btn.Background = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color]::FromRgb(0x18,0x1C,0x38))
+        $btn.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161B26")
+        
+        # Bepaal de accentkleur op basis van type
+        $accentColor = switch ($t.Type) {
+            "GitHub" { "#3B82F6" } # Blauw
+            "Cmd"    { "#10B981" } # Groen
+            "Web"    { "#F59E0B" } # Oranje
+            "Link"   { "#9CA3AF" } # Grijs
+            default  { "#8B5CF6" } # Paars
+        }
+
+        # Template met gekleurde linkerrand
         $btn.Template = [Windows.Markup.XamlReader]::Parse(
             "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='Button'>" +
-            "  <Border CornerRadius='4' BorderThickness='1' Background='{TemplateBinding Background}' BorderBrush='#338B5CF6'>" +
-            "    <ContentPresenter HorizontalAlignment='Stretch' VerticalAlignment='Center'/>" +
+            "  <Border CornerRadius='6' Background='{TemplateBinding Background}' BorderBrush='$accentColor' BorderThickness='4,0,0,0'>" +
+            "    <ContentPresenter HorizontalAlignment='Stretch' VerticalAlignment='Center' Margin='15,0'/>" +
             "  </Border>" +
             "</ControlTemplate>"
         )
 
         $grid = New-Object System.Windows.Controls.Grid
-        $grid.Margin = "12,6"
         $grid.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition)) | Out-Null
         $grid.ColumnDefinitions[0].Width = [System.Windows.GridLength]::new(1, [System.Windows.GridUnitType]::Star)
         $grid.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition)) | Out-Null
@@ -576,37 +574,29 @@ foreach ($cat in $Categories) {
         $leftStack = New-Object System.Windows.Controls.StackPanel
         $nameBlock = New-Object System.Windows.Controls.TextBlock
         $nameBlock.Text = $t.Name
-        $nameBlock.FontSize = 14
-        $nameBlock.FontWeight = "SemiBold"
+        $nameBlock.FontSize = 15
+        $nameBlock.FontWeight = "Bold"
         $nameBlock.Foreground = [Windows.Media.Brushes]::White
         $descBlock = New-Object System.Windows.Controls.TextBlock
         $descBlock.Text = $t.Desc
         $descBlock.FontSize = 11
-        $descBlock.Opacity = 0.7
-        $descBlock.TextWrapping = "Wrap"
-        $descBlock.Foreground = [Windows.Media.Brushes]::White
+        $descBlock.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#9CA3AF")
+        $descBlock.Margin = "0,2,0,0"
         $leftStack.Children.Add($nameBlock) | Out-Null
         $leftStack.Children.Add($descBlock) | Out-Null
 
         $srcBadge = New-Object System.Windows.Controls.Border
-        $srcBadge.CornerRadius = 3
-        $srcBadge.Padding = "5,2"
+        $srcBadge.CornerRadius = 4
+        $srcBadge.Padding = "8,4"
         $srcBadge.VerticalAlignment = "Center"
-        $srcBadge.Margin = "8,0,0,0"
+        $srcBadge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1F2937")
+        
         $srcText = New-Object System.Windows.Controls.TextBlock
-        $srcText.Text = $t.Type
-        $srcText.FontSize = 9
-        $srcText.FontWeight = "Bold"
-        $srcText.Foreground = [Windows.Media.Brushes]::White
+        $srcText.Text = $t.Type.ToUpper()
+        $srcText.FontSize = 10
+        $srcText.FontWeight = "Black"
+        $srcText.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($accentColor)
         $srcBadge.Child = $srcText
-
-        switch ($t.Type) {
-            "GitHub" { $srcBadge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1F2A5A"); $srcText.Foreground = [Windows.Media.Brushes]::LightBlue }
-            "Cmd"    { $srcBadge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#3A1E5A"); $srcText.Foreground = [Windows.Media.Brushes]::Plum }
-            "Web"    { $srcBadge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#2A1F4A"); $srcText.Foreground = [Windows.Media.Brushes]::LightPink }
-            "Link"   { $srcBadge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#2A2A4A"); $srcText.Foreground = [Windows.Media.Brushes]::LightGray }
-            default  { $srcBadge.Background = [Windows.Media.Brushes]::DarkSlateGray; $srcText.Foreground = [Windows.Media.Brushes]::White }
-        }
 
         $grid.Children.Add($leftStack) | Out-Null
         $grid.Children.Add($srcBadge) | Out-Null
@@ -615,81 +605,17 @@ foreach ($cat in $Categories) {
 
         $btn.Content = $grid
 
-        $btnBg    = [Windows.Media.SolidColorBrush]::new([Windows.Media.Color]::FromRgb(0x18,0x1C,0x38))
-        $btnScale = [Windows.Media.ScaleTransform]::new(1.0, 1.0)
-        $btnGlow  = [Windows.Media.Effects.DropShadowEffect]::new()
-        $btnGlow.Color       = [Windows.Media.Color]::FromRgb(0x8B,0x5C,0xF6)
-        $btnGlow.BlurRadius  = 0
-        $btnGlow.ShadowDepth = 0
-        $btnGlow.Opacity     = 0
-        $btn.Background = $btnBg
-        $btn.Tag        = $btnScale
-        $btn.Resources["glow"] = $btnGlow
-
+        # Hover animatie
         $btn.Add_MouseEnter({
-            $b   = $_.Source
-            $bg  = $b.Background
-            $sc  = $b.Tag
-            $glw = $b.Resources["glow"]
-            if (-not $bg -or -not $sc) { return }
-            $d    = [Windows.Duration]::new([TimeSpan]::FromMilliseconds(130))
-            $ease = [Windows.Media.Animation.CubicEase]::new()
-            $a  = [Windows.Media.Animation.ColorAnimation]::new([Windows.Media.Color]::FromRgb(0x8B,0x5C,0xF6), $d)
-            $bg.BeginAnimation([Windows.Media.SolidColorBrush]::ColorProperty, $a)
-            $ax = [Windows.Media.Animation.DoubleAnimation]::new(1.02, $d); $ax.EasingFunction = $ease
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleXProperty, $ax)
-            $ay = [Windows.Media.Animation.DoubleAnimation]::new(1.02, $d); $ay.EasingFunction = $ease
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleYProperty, $ay)
-            if ($glw) {
-                $ab = [Windows.Media.Animation.DoubleAnimation]::new(10.0, $d)
-                $glw.BeginAnimation([Windows.Media.Effects.DropShadowEffect]::BlurRadiusProperty, $ab)
-                $ao = [Windows.Media.Animation.DoubleAnimation]::new(0.7, $d)
-                $glw.BeginAnimation([Windows.Media.Effects.DropShadowEffect]::OpacityProperty, $ao)
-            }
+            $b = $_.Source
+            $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1F2937")
         })
-
         $btn.Add_MouseLeave({
-            $b   = $_.Source
-            $bg  = $b.Background
-            $sc  = $b.Tag
-            $glw = $b.Resources["glow"]
-            if (-not $bg -or -not $sc) { return }
-            $d    = [Windows.Duration]::new([TimeSpan]::FromMilliseconds(180))
-            $ease = [Windows.Media.Animation.CubicEase]::new()
-            $a  = [Windows.Media.Animation.ColorAnimation]::new([Windows.Media.Color]::FromRgb(0x18,0x1C,0x38), $d)
-            $bg.BeginAnimation([Windows.Media.SolidColorBrush]::ColorProperty, $a)
-            $ax = [Windows.Media.Animation.DoubleAnimation]::new(1.0, $d); $ax.EasingFunction = $ease
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleXProperty, $ax)
-            $ay = [Windows.Media.Animation.DoubleAnimation]::new(1.0, $d); $ay.EasingFunction = $ease
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleYProperty, $ay)
-            if ($glw) {
-                $ab = [Windows.Media.Animation.DoubleAnimation]::new(0.0, $d)
-                $glw.BeginAnimation([Windows.Media.Effects.DropShadowEffect]::BlurRadiusProperty, $ab)
-                $ao = [Windows.Media.Animation.DoubleAnimation]::new(0.0, $d)
-                $glw.BeginAnimation([Windows.Media.Effects.DropShadowEffect]::OpacityProperty, $ao)
-            }
+            $b = $_.Source
+            $b.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161B26")
         })
 
-        $btn.Add_PreviewMouseDown({
-            $b  = $_.Source; $sc = $b.Tag
-            if (-not $sc) { return }
-            $d  = [Windows.Duration]::new([TimeSpan]::FromMilliseconds(80))
-            $ax = [Windows.Media.Animation.DoubleAnimation]::new(0.98, $d)
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleXProperty, $ax)
-            $ay = [Windows.Media.Animation.DoubleAnimation]::new(0.98, $d)
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleYProperty, $ay)
-        })
-
-        $btn.Add_PreviewMouseUp({
-            $b  = $_.Source; $sc = $b.Tag
-            if (-not $sc) { return }
-            $d  = [Windows.Duration]::new([TimeSpan]::FromMilliseconds(100))
-            $ax = [Windows.Media.Animation.DoubleAnimation]::new(1.02, $d)
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleXProperty, $ax)
-            $ay = [Windows.Media.Animation.DoubleAnimation]::new(1.02, $d)
-            $sc.BeginAnimation([Windows.Media.ScaleTransform]::ScaleYProperty, $ay)
-        })
-
+        # Klik event
         $btn.Add_Click({
             $clickedBtn = $_.Source
             $tName      = ($clickedBtn.Content.Children[0].Children[0]).Text
@@ -708,115 +634,116 @@ foreach ($cat in $Categories) {
 # ==============================================================================
 # SEARCH FUNCTIONALITY
 # ==============================================================================
-$searchResultsList = New-Object System.Windows.Controls.ListBox
-$searchResultsList.Background = [Windows.Media.Brushes]::Transparent
-$searchResultsList.BorderThickness = [System.Windows.Thickness]::new(0)
-$searchResultsList.HorizontalContentAlignment = "Stretch"
-$searchResultsList.ItemContainerStyle = [Windows.Style]::new([Windows.Controls.ListBoxItem])
-$searchResultsList.ItemContainerStyle.Setters.Add(
-    [Windows.Setter]::new([Windows.Controls.Control]::BackgroundProperty, [Windows.Media.Brushes]::Transparent)
-)
-$searchResultsList.ItemContainerStyle.Setters.Add(
-    [Windows.Setter]::new([Windows.Controls.Control]::HorizontalContentAlignmentProperty, [Windows.HorizontalAlignment]::Stretch)
-)
-$searchResultsList.ItemContainerStyle.Setters.Add(
-    [Windows.Setter]::new([Windows.Controls.Control]::PaddingProperty, [System.Windows.Thickness]::new(0))
-)
-$searchResultsList.ItemContainerStyle.Setters.Add(
-    [Windows.Setter]::new([Windows.Controls.Control]::MarginProperty, [System.Windows.Thickness]::new(0))
-)
+$searchPanel = New-Object System.Windows.Controls.ScrollViewer
+$searchPanel.VerticalScrollBarVisibility = "Auto"
+$searchPanel.Margin = "0,10,0,0"
+$searchStack = New-Object System.Windows.Controls.StackPanel
 
-$ContentHost.Children.Add($searchResultsList) | Out-Null
-$searchResultsList.Visibility = "Collapsed"
+$ToolsTab.Parent.Children.Add($searchPanel) | Out-Null
+$searchPanel.Content = $searchStack
+$searchPanel.Visibility = "Collapsed"
 
 $SearchBox.Add_TextChanged({
     $query = $SearchBox.Text.Trim()
     if ($query.Length -eq 0) {
         $ToolsTab.Visibility = "Visible"
-        $searchResultsList.Visibility = "Collapsed"
+        $searchPanel.Visibility = "Collapsed"
         return
     }
 
     $ToolsTab.Visibility = "Collapsed"
-    $searchResultsList.Visibility = "Visible"
+    $searchPanel.Visibility = "Visible"
 
     $matches = $ToolData | Where-Object {
         $_.Name -like "*$query*" -or $_.Desc -like "*$query*" -or $_.Category -like "*$query*"
     }
 
-    $searchResultsList.Items.Clear()
+    $searchStack.Children.Clear()
+    
+    if ($matches.Count -eq 0) {
+        $noRes = New-Object System.Windows.Controls.TextBlock
+        $noRes.Text = "Geen tools gevonden voor '$query'"
+        $noRes.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#9CA3AF")
+        $noRes.Margin = "10,20,0,0"
+        $noRes.FontSize = 14
+        $searchStack.Children.Add($noRes) | Out-Null
+        return
+    }
+
     foreach ($tool in $matches) {
+        $btn = New-Object System.Windows.Controls.Button
+        $btn.Height = 65
+        $btn.Margin = "0,0,0,8"
+        $btn.Cursor = "Hand"
+        $btn.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161B26")
+        
+        $accentColor = switch ($tool.Type) {
+            "GitHub" { "#3B82F6" }
+            "Cmd"    { "#10B981" }
+            "Web"    { "#F59E0B" }
+            "Link"   { "#9CA3AF" }
+            default  { "#8B5CF6" }
+        }
+
+        $btn.Template = [Windows.Markup.XamlReader]::Parse(
+            "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='Button'>" +
+            "  <Border CornerRadius='6' Background='{TemplateBinding Background}' BorderBrush='$accentColor' BorderThickness='4,0,0,0'>" +
+            "    <ContentPresenter HorizontalAlignment='Stretch' VerticalAlignment='Center' Margin='15,0'/>" +
+            "  </Border>" +
+            "</ControlTemplate>"
+        )
+
         $grid = New-Object System.Windows.Controls.Grid
-        $grid.Margin = "8,4"
         $grid.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition)) | Out-Null
         $grid.ColumnDefinitions[0].Width = [System.Windows.GridLength]::new(1, [System.Windows.GridUnitType]::Star)
         $grid.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition)) | Out-Null
         $grid.ColumnDefinitions[1].Width = [System.Windows.GridLength]::Auto
 
+        $leftStack = New-Object System.Windows.Controls.StackPanel
         $nameBlock = New-Object System.Windows.Controls.TextBlock
         $nameBlock.Text = $tool.Name
-        $nameBlock.FontSize = 14
-        $nameBlock.FontWeight = "SemiBold"
+        $nameBlock.FontSize = 15
+        $nameBlock.FontWeight = "Bold"
         $nameBlock.Foreground = [Windows.Media.Brushes]::White
-
         $descBlock = New-Object System.Windows.Controls.TextBlock
-        $descBlock.Text = $tool.Desc
+        $descBlock.Text = "$($tool.Desc)  •  $($tool.Category)"
         $descBlock.FontSize = 11
-        $descBlock.Opacity = 0.7
-        $descBlock.Foreground = [Windows.Media.Brushes]::White
-
-        $leftStack = New-Object System.Windows.Controls.StackPanel
+        $descBlock.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom("#9CA3AF")
+        $descBlock.Margin = "0,2,0,0"
         $leftStack.Children.Add($nameBlock) | Out-Null
         $leftStack.Children.Add($descBlock) | Out-Null
 
-        $badge = New-Object System.Windows.Controls.Border
-        $badge.CornerRadius = 3
-        $badge.Padding = "5,2"
-        $badge.VerticalAlignment = "Center"
-        $badgeText = New-Object System.Windows.Controls.TextBlock
-        $badgeText.Text = $tool.Type
-        $badgeText.FontSize = 9
-        $badgeText.FontWeight = "Bold"
-        $badgeText.Foreground = [Windows.Media.Brushes]::White
-        $badge.Child = $badgeText
-        switch ($tool.Type) {
-            "GitHub" { $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1F2A5A"); $badgeText.Foreground = [Windows.Media.Brushes]::LightBlue }
-            "Cmd"    { $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#3A1E5A"); $badgeText.Foreground = [Windows.Media.Brushes]::Plum }
-            "Web"    { $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#2A1F4A"); $badgeText.Foreground = [Windows.Media.Brushes]::LightPink }
-            "Link"   { $badge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#2A2A4A"); $badgeText.Foreground = [Windows.Media.Brushes]::LightGray }
-            default  { $badge.Background = [Windows.Media.Brushes]::DarkSlateGray; $badgeText.Foreground = [Windows.Media.Brushes]::White }
-        }
+        $srcBadge = New-Object System.Windows.Controls.Border
+        $srcBadge.CornerRadius = 4
+        $srcBadge.Padding = "8,4"
+        $srcBadge.VerticalAlignment = "Center"
+        $srcBadge.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1F2937")
+        
+        $srcText = New-Object System.Windows.Controls.TextBlock
+        $srcText.Text = $tool.Type.ToUpper()
+        $srcText.FontSize = 10
+        $srcText.FontWeight = "Black"
+        $srcText.Foreground = [Windows.Media.BrushConverter]::new().ConvertFrom($accentColor)
+        $srcBadge.Child = $srcText
 
         $grid.Children.Add($leftStack) | Out-Null
-        $grid.Children.Add($badge) | Out-Null
+        $grid.Children.Add($srcBadge) | Out-Null
         [System.Windows.Controls.Grid]::SetColumn($leftStack, 0)
-        [System.Windows.Controls.Grid]::SetColumn($badge, 1)
+        [System.Windows.Controls.Grid]::SetColumn($srcBadge, 1)
 
-        $button = New-Object System.Windows.Controls.Button
-        $button.Content = $grid
-        $button.Tag = $tool
-        $button.Background = [Windows.Media.Brushes]::Transparent
-        $button.BorderThickness = [System.Windows.Thickness]::new(0)
-        $button.HorizontalContentAlignment = "Stretch"
-        $button.VerticalContentAlignment = "Center"
-        $button.Cursor = "Hand"
-        $button.Focusable = $false
+        $btn.Content = $grid
 
-        $button.Template = [Windows.Markup.XamlReader]::Parse(
-            "<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='Button'>" +
-            "  <Border Background='{TemplateBinding Background}' BorderThickness='0'>" +
-            "    <ContentPresenter HorizontalAlignment='Stretch' VerticalAlignment='Center'/>" +
-            "  </Border>" +
-            "</ControlTemplate>"
-        )
+        $btn.Add_MouseEnter({ $_.Source.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#1F2937") })
+        $btn.Add_MouseLeave({ $_.Source.Background = [Windows.Media.BrushConverter]::new().ConvertFrom("#161B26") })
 
-        $button.Add_Click({
+        $btn.Add_Click({
             $clickedBtn = $_.Source
-            $selectedTool = $clickedBtn.Tag
-            if ($selectedTool) { Invoke-ToolAction -tool $selectedTool }
+            $tName      = ($clickedBtn.Content.Children[0].Children[0]).Text
+            $tData      = $ToolData | Where-Object { $_.Name -eq $tName } | Select-Object -First 1
+            if ($tData) { Invoke-ToolAction -tool $tData }
         })
 
-        $searchResultsList.Items.Add($button) | Out-Null
+        $searchStack.Children.Add($btn) | Out-Null
     }
 })
 
@@ -839,7 +766,7 @@ $ClearCacheBtn.Add_Click({
         $count = @($items).Count
         $items | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
         Write-Log "Cleared $count item(s) from install folder."
-        Set-Status "Clean" "Removed downloaded files and folders." "IDLE"
+        Set-Status "Systeem Schoon" "Verwijderde gedownloade bestanden." "IDLE" "#10B981"
     } else {
         Write-Log "Nothing to clear - install folder does not exist yet."
     }
@@ -850,8 +777,9 @@ $OpenCmdBtn.Add_Click({
     Write-Log "Opened CMD."
 })
 
-Write-Log "Files will be saved to: $installDir"
-Write-Log "No tools loaded — add entries to `$ToolData."
-Set-Status "Ready" "Voeg tools toe aan `$ToolData om te beginnen." "IDLE"
+Write-Log "Systeem geinitialiseerd."
+Write-Log "Opslaglocatie: $installDir"
+Write-Log "Wachten op input..."
+Set-Status "Systeem Gereed" "Voeg tools toe aan `$ToolData om te beginnen." "IDLE" "#10B981"
 
 $window.ShowDialog() | Out-Null
